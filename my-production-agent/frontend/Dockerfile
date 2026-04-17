@@ -1,9 +1,12 @@
 FROM nginx:alpine
 
-# Copy static frontend files
-COPY ./ /usr/share/nginx/html/
+# Copy ALL content from static folder directly to web root
+COPY ./static/ /usr/share/nginx/html/
 
-# Copy nginx config and entrypoint
+# Delete default nginx config that causes the "Welcome to nginx" page
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx config and entrypoint
 COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY ./entrypoint.sh /entrypoint.sh
 
