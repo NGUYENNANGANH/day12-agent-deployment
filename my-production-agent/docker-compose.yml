@@ -46,6 +46,8 @@ services:
     build: ./frontend
     ports:
       - "80:80"
+    environment:
+      - BACKEND_URL=http://api:8000
     depends_on:
       - api
     restart: unless-stopped

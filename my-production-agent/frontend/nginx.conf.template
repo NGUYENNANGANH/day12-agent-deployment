@@ -9,26 +9,29 @@ http {
     server {
         listen 80;
 
-        # Serve static files from root
+        # For variable-based proxy_pass, nginx needs an explicit resolver.
+        # Render doesn't provide Docker's 127.0.0.11 resolver, so use public DNS.
+        resolver 1.1.1.1 8.8.8.8 valid=30s;
+
+        # Serve static SPA
         location / {
             root   /usr/share/nginx/html;
             index  index.html;
             try_files $uri $uri.html $uri/ /index.html;
         }
 
-        # Proxy API requests using variable to bypass startup DNS check
+        # Proxy API requests to backend (set via BACKEND_URL)
         location /api {
-            # Default for local docker-compose; overridden via BACKEND_URL on Render.
-            set $backend_url http://api:8000;
+            set $backend_url ${BACKEND_URL};
             proxy_pass $backend_url;
-            
-            # Ensure upstream host header (important when proxying to *.onrender.com)
+
+            # Keep backend Host for multi-service routing (e.g. *.onrender.com)
             proxy_set_header Host $proxy_host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header X-Forwarded-Host $host;
-            
+
             proxy_ssl_server_name on;
             proxy_connect_timeout 60s;
             proxy_read_timeout 60s;
@@ -40,3 +43,4 @@ http {
         }
     }
 }
+

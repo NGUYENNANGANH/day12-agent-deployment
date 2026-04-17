@@ -1,5 +1,8 @@
 FROM nginx:alpine
 
+# For envsubst used in entrypoint.sh
+RUN apk add --no-cache gettext
+
 # Copy ALL content from static folder directly to web root
 COPY ./static/ /usr/share/nginx/html/
 
@@ -7,7 +10,7 @@ COPY ./static/ /usr/share/nginx/html/
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy custom nginx config and entrypoint
-COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./entrypoint.sh /entrypoint.sh
 
 # Make entrypoint executable

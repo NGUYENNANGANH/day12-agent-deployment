@@ -29,8 +29,8 @@ services:
     dockerfilePath: my-production-agent/frontend/Dockerfile
     plan: free
     envVars:
-      - key: BACKEND_HOST
-        value: eco-health-api
+      - key: BACKEND_URL
+        value: https://eco-health-api.onrender.com
 
   # 3. Redis Service
   - type: redis
