@@ -1,5 +1,16 @@
 FROM nginx:alpine
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY static /usr/share/nginx/html
+
+# Copy static frontend files
+COPY ./ /usr/share/nginx/html/
+
+# Copy nginx config and entrypoint
+COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./entrypoint.sh /entrypoint.sh
+
+# Make entrypoint executable
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# Use the custom entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
