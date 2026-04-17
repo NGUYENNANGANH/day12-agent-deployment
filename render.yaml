@@ -4,7 +4,6 @@ services:
     name: eco-health-api
     runtime: docker
     dockerContext: my-production-agent/backend
-    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: MONGO_URI
@@ -24,7 +23,6 @@ services:
     name: eco-health-web
     runtime: docker
     dockerContext: my-production-agent/frontend
-    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: BACKEND_HOST
