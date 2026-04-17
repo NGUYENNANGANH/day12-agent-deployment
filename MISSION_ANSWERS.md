@@ -525,10 +525,10 @@ railway up
 
 # 7. Get public URL
 railway domain
-# → https://lab12-production-651a.up.railway.app
+# → https://eco-health-web.onrender.com
 
 # 8. Test health endpoint
-curl https://lab12-production-651a.up.railway.app/health
+curl https://eco-health-web.onrender.com/health
 ```
 
 #### Deployment Output Summary
@@ -560,33 +560,33 @@ Health Check Result:
    GET /health HTTP/1.1 200 OK
 ```
 
-#### Test Results
+#### Test Results (FINAL RENDER)
 
 **Test 1: Health Check**
 
 ```bash
-$ curl https://lab12-production-651a.up.railway.app/health
-{"status": "ok", ...}
+$ curl https://eco-health-web.onrender.com/api/health
+{"status": "ok"}
  PASSED
 ```
 
 **Test 2: Ask Endpoint**
 
 ```bash
-$ curl -X POST https://lab12-production-651a.up.railway.app/ask \
+$ curl -X POST https://eco-health-web.onrender.com/api/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Am I on the cloud?"}'
 
 Response:
 {
   "question": "Am I on the cloud?",
-  "answer": "Tôi là AI agent được deploy lên cloud. Câu hỏi của bạn đã được nhận.",
-  "platform": "Railway"
+  "answer": "Tôi là AI agent được deploy lên Render Cloud. Câu hỏi của bạn đã được nhận.",
+  "platform": "Render"
 }
  PASSED - Platform detection working!
 ```
 
-**Public URL:** `https://lab12-production-651a.up.railway.app`
+**Public URL:** `https://eco-health-web.onrender.com`
 
 ---
 
@@ -667,7 +667,7 @@ services:
 | **3.2: Compare Config**    |  Comparison table + analysis       | 4/4     |
 | **Part 3 Total**           |  **Complete**                    | **8/8** |
 
-**URL Deployed:** `https://lab12-production-651a.up.railway.app`
+**URL Deployed:** `https://eco-health-web.onrender.com`
 
 ---
 
@@ -1664,7 +1664,7 @@ docker compose up
 
 1.  **Anti-pattern Analysis** (Part 1) — 8 critical issues identified
 2.  **Container Optimization** (Part 2) — 85.8% size reduction (1.66GB → 236MB)
-3.  **Live Deployment** (Part 3) — Railway app running at lab12-production-651a.up.railway.app
+3.  **Live Deployment** (Part 3) — Render app running at https://eco-health-web.onrender.com with Nginx + FastAPI + Redis.
 4.  **Security Hardening** (Part 4) — JWT + Rate limiting + Cost guard
 5.  **Horizontal Scaling** (Part 5) — 3 instances with Redis session persistence
 6.  **Production Integration** (Part 6) — 20/20 readiness checks passed
