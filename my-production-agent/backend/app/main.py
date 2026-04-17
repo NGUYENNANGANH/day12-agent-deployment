@@ -32,20 +32,23 @@ logger = logging.getLogger(__name__)
 # -----------------
 START_TIME = time.time()
 _is_ready = False
-r = redis.from_url(settings.redis_url, decode_responses=True)
+r: Optional[redis.Redis] = None
 
 # -----------------
 # Lifespan
 # -----------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _is_ready
-    await connect_to_mongo()
-    _is_ready = True
-    yield
-    _is_ready = False
-    await close_mongo_connection()
-    r.close()
+    global _is_ready, r
+    try:
+        r = redis.from_url(settings.redis_url, decode_responses=True)
+        await connect_to_mongo()
+        _is_ready = True
+        yield
+    finally:
+        _is_ready = False
+        await close_mongo_connection()
+        if r: r.close()
 
 # -----------------
 # App Init
@@ -189,6 +192,8 @@ async def call_openai(question: str, history: list, lat: Optional[float] = None,
 async def ask(body: AskRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["username"]
     check_rate_limit(user_id)
+    if not r:
+        raise HTTPException(status_code=503, detail="Redis connection not ready")
     history_key = f"history:{user_id}"
     history = r.lrange(history_key, 0, -1)
     ans = await call_openai(body.question, history, lat=body.lat, lon=body.lon)
