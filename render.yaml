@@ -31,7 +31,8 @@ services:
         value: eco-health-api
 
 # 3. Managed Redis
-databases:
+redisInstances:
   - name: eco-health-redis
-    type: redis
     plan: free
+    # Note: Keep it as 'free' for the lab.
+
