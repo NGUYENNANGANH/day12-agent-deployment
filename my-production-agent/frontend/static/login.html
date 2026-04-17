@@ -54,7 +54,17 @@
             const u = document.getElementById('u').value.trim();
             const p = document.getElementById('p').value.trim();
             const err = document.getElementById('err');
-            if(!u || !p) return;
+            err.style.display = 'none';
+            err.innerText = '';
+            const btn = document.getElementById('btn');
+            if(!u || !p) {
+                err.innerText = "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.";
+                err.style.display = 'block';
+                return;
+            }
+            btn.disabled = true;
+            const prevText = btn.innerText;
+            btn.innerText = 'Đang xử lý...';
             
             const formData = new FormData();
             formData.append('username', u);
@@ -65,12 +75,22 @@
                     method: 'POST',
                     body: formData
                 });
-                const d = await r.json();
+                let d = null;
+                try { d = await r.json(); } catch(_) { d = null; }
                 if(r.ok) {
                     localStorage.setItem('t', d.access_token);
                     window.location.href = '/';
-                } else { err.innerText = d.detail; err.style.display = 'block'; }
-            } catch(e) { err.innerText = "Lỗi kết nối server"; err.style.display = 'block'; }
+                } else {
+                    err.innerText = (d && d.detail) ? d.detail : `Đăng nhập thất bại (HTTP ${r.status}).`;
+                    err.style.display = 'block';
+                }
+            } catch(e) {
+                err.innerText = "Lỗi kết nối server";
+                err.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = prevText;
+            }
         };
     </script>
 </body>
