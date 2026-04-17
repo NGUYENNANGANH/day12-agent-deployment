@@ -192,14 +192,30 @@ async def call_openai(question: str, history: list, lat: Optional[float] = None,
 async def ask(body: AskRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["username"]
     check_rate_limit(user_id)
-    if not r:
-        raise HTTPException(status_code=503, detail="Redis connection not ready")
+    history = []
     history_key = f"history:{user_id}"
-    history = r.lrange(history_key, 0, -1)
+    
+    if r:
+        try:
+            history = r.lrange(history_key, 0, -1)
+        except Exception as e:
+            logger.warning(f"Failed to fetch history from Redis: {e}")
+
     ans = await call_openai(body.question, history, lat=body.lat, lon=body.lon)
-    r.rpush(history_key, f"Q: {body.question}", f"A: {ans}")
-    r.expire(history_key, 86400)
-    return AskResponse(question=body.question, answer=ans, history_length=len(history) // 2 + 1, timestamp=datetime.now(timezone.utc).isoformat())
+    
+    if r:
+        try:
+            r.rpush(history_key, f"Q: {body.question}", f"A: {ans}")
+            r.expire(history_key, 86400)
+        except Exception as e:
+            logger.warning(f"Failed to save history to Redis: {e}")
+
+    return AskResponse(
+        question=body.question, 
+        answer=ans, 
+        history_length=len(history) // 2 + 1, 
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
 
 @app.get("/api/health")
 def health(): return {"status": "ok"}
