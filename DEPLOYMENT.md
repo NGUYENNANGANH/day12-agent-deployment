@@ -2,7 +2,7 @@
 **Student:** Nguyễn Năng Anh (2A202600184)
 
 ## Public Service URL
-**https://eco-health-agent-2a202600184.onrender.com**
+**https://eco-health-api.onrender.com**
 
 ## Tech Stack
 - **Backend**: FastAPI (Python 3.11)
@@ -20,13 +20,13 @@
 
 ### 1. Health Check
 ```bash
-curl https://eco-health-agent-2a202600184.onrender.com/health
+curl https://eco-health-api.onrender.com/health
 ```
 **Expected Response**: `{"status": "ok", ...}`
 
 ### 2. Protected Endpoint (Authentication required)
 ```bash
-curl -i https://eco-health-agent-2a202600184.onrender.com/ask
+curl -i https://eco-health-api.onrender.com/ask
 ```
 **Expected Response**: `401 Unauthorized`
 

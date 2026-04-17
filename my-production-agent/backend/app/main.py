@@ -217,5 +217,6 @@ async def ask(body: AskRequest, current_user: dict = Depends(get_current_user)):
         timestamp=datetime.now(timezone.utc).isoformat()
     )
 
+@app.get("/health")
 @app.get("/api/health")
-def health(): return {"status": "ok"}
+def health(): return {"status": "ok", "platform": "Render"}

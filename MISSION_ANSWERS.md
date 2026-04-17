@@ -526,7 +526,7 @@ git push origin main
 #   - Build thành công trong khoảng 3-5 phút.
 
 # 6. Verify URL
-#   - URL: https://eco-health-agent-2a202600184.onrender.com
+#   - URL: https://eco-health-api.onrender.com
 #   - Chứng minh: Xem ảnh chụp Dashboard và Logs bên dưới.
 
 #### Render Deployment Proof (Minh chứng triển khai)
@@ -567,7 +567,7 @@ Health Check Result:
 **Test 1: Health Check**
 
 ```bash
-$ curl https://eco-health-agent-2a202600184.onrender.com/health
+$ curl https://eco-health-api.onrender.com/health
 {"status": "ok", "platform": "Render"}
  PASSED
 ```
@@ -575,7 +575,7 @@ $ curl https://eco-health-agent-2a202600184.onrender.com/health
 **Test 2: Ask Endpoint**
 
 ```bash
-$ curl -X POST https://eco-health-agent-2a202600184.onrender.com/ask \
+$ curl -X POST https://eco-health-api.onrender.com/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Am I on the cloud?"}'
 
@@ -588,7 +588,7 @@ Response:
  PASSED - Platform detection working!
 ```
 
-**Public URL:** `https://eco-health-agent-2a202600184.onrender.com`
+**Public URL:** `https://eco-health-api.onrender.com`
 
 ---
 
