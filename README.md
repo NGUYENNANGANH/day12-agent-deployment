@@ -1,54 +1,109 @@
-# 🌍 Eco-Health AI Agent (Day 12 Production)
+# Day 12 — Deployment: Đưa Agent Lên Cloud
 
-## 🔗 Live Demo URL: [https://eco-health-web.onrender.com](https://eco-health-web.onrender.com)
-
----
-
-## 📖 Giới thiệu dự án
-Eco-Health AI Agent là một trợ lý AI thông minh chuyên tư vấn về sức khỏe và môi trường. Dự án được phát triển theo kiến trúc **Decoupled (Tách biệt)** hoàn toàn giữa Frontend và Backend để tối ưu hiệu năng và khả năng mở rộng trên Cloud.
-
-### Tính năng nổi bật:
-- **Tư vấn môi trường**: Kết hợp dữ liệu thời tiết và chất lượng không khí (AQI) thực tế qua Open-Meteo.
-- **Định vị GPS**: Tự động nhận diện tọa độ người dùng để đưa ra cảnh báo chính xác tại vị trí hiện tại.
-- **Bảo mật JWT**: Hệ thống đăng ký/đăng nhập an toàn.
-- **Quản lý chi phí (Cost Guard)**: Giới hạn ngân sách Token để tránh lãng phí API Key.
-- **Giao diện tối giản**: Phong cách Notion monochrome, hỗ trợ Responsive (điện thoại & máy tính).
+> **AICB-P1 · VinUniversity 2026**  
+> Repository thực hành đi kèm bài giảng Day 12.  
+> Mỗi phần có ví dụ **cơ bản** (hiểu concept) và **chuyên sâu** (production-ready).
 
 ---
 
-## 🚀 Hướng dẫn chạy Locally (Trên máy tính của bạn)
+## Cấu Trúc Project
 
-Để chạy dự án này mà không gặp lỗi, bạn cần cài đặt **Docker** và **Docker Desktop**.
+```
+day12_ha-tang-cloud_va_deployment/
+├── 01-localhost-vs-production/     # Section 1: Dev ≠ Production
+│   ├── develop/                      #   Agent "đúng kiểu localhost"
+│   └── production/                   #   12-Factor compliant agent
+│
+├── 02-docker/                      # Section 2: Containerization
+│   ├── develop/                      #   Dockerfile đơn giản
+│   └── production/                   #   Multi-stage + Docker Compose stack
+│
+├── 03-cloud-deployment/            # Section 3: Cloud Options
+│   ├── railway/                    #   Deploy Railway (< 5 phút)
+│   ├── render/                     #   Deploy Render + render.yaml
+│   └── production-cloud-run/         #   GCP Cloud Run + CI/CD
+│
+├── 04-api-gateway/                 # Section 4: Security
+│   ├── develop/                      #   API Key authentication
+│   └── production/                   #   JWT + Rate Limiting + Cost Guard
+│
+├── 05-scaling-reliability/         # Section 5: Scale & Reliability
+│   ├── develop/                      #   Health check + graceful shutdown
+│   └── production/                   #   Stateless + Redis + Nginx LB
+│
+├── 06-lab-complete/                # Lab 12: Production-ready agent
+│   └── (full project kết hợp tất cả)
+│
+└── utils/                          # Mock LLM dùng chung (không cần API key)
+```
 
-1. **Clone Repository (Nếu chưa có):**
-   ```bash
-   git clone <link-repo-github>
-   cd day12_ha-tang-cloud_va_deployment/my-production-agent
-   ```
+---
 
-2. **Cấu hình Biến môi trường:**
-   Tạo file `.env` từ file mẫu:
-   ```bash
-   cp .env.example .env
-   ```
-   Sau đó mở file `.env` và điền `OPENAI_API_KEY` của bạn vào.
+## 🚀 Bắt Đầu Nhanh
 
-3. **Khởi động dự án bằng Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
+**Muốn thử ngay?** → [QUICK_START.md](QUICK_START.md) (5 phút)
 
-4. **Truy cập:**
-   - Website chính: `http://localhost:8080`
-   - API Backend: `http://localhost:8000/api/health`
+**Muốn học kỹ?** → [CODE_LAB.md](CODE_LAB.md) (3-4 giờ)
+
+## Cách Học
+
+| Bước | Làm gì |
+|------|--------|
+| 0 | **[Khuyến nghị]** Đọc [QUICK_START.md](QUICK_START.md) để thử nhanh |
+| 1 | Đọc [CODE_LAB.md](CODE_LAB.md) để hiểu chi tiết |
+| 2 | Chạy ví dụ **basic** trước — hiểu concept |
+| 3 | So sánh với ví dụ **advanced** — thấy sự khác biệt |
+| 4 | Tự làm Lab 06 từ đầu trước khi xem solution |
+| 5 | Tham khảo [QUICK_REFERENCE.md](QUICK_REFERENCE.md) khi cần |
+| 6 | Xem [TROUBLESHOOTING.md](TROUBLESHOOTING.md) khi gặp lỗi |
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
-- **Frontend**: Nginx (Alpine) phục vụ file tĩnh và Proxy API.
-- **Backend**: FastAPI (Python 3.11) xử lý logic nghiệp vụ và Agent.
-- **Database**: MongoDB (Lưu trữ người dùng và lịch sử chat).
-- **Cache**: Redis (Xử lý Rate Limiting và Memory).
+## Yêu Cầu
+
+```bash
+python 3.11+
+docker & docker compose
+```
+
+Mỗi folder có `requirements.txt` riêng. Không cần API key thật — các ví dụ dùng **mock LLM** để chạy offline.
 
 ---
-*Dự án thuộc chương trình đào tạo AI thực chiến - Day 12.*
+
+## Sections
+
+| # | Folder | Concept chính |
+|---|--------|--------------|
+| 1 | `01-localhost-vs-production` | Dev/prod gap, 12-factor, secrets |
+| 2 | `02-docker` | Dockerfile, multi-stage, docker-compose |
+| 3 | `03-cloud-deployment` | Railway, Render, Cloud Run |
+| 4 | `04-api-gateway` | Auth, rate limiting, cost protection |
+| 5 | `05-scaling-reliability` | Health check, stateless, rolling deploy |
+| 6 | `06-lab-complete` | **Full production agent** |
+
+---
+
+## 📚 Lab Materials
+
+Chúng tôi đã chuẩn bị đầy đủ tài liệu hướng dẫn:
+
+### Cho Sinh Viên
+
+| Tài liệu | Mô tả | Thời gian |
+|----------|-------|-----------|
+| **[CODE_LAB.md](CODE_LAB.md)** | Hướng dẫn lab chi tiết từng bước | 3-4 giờ |
+| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | Cheat sheet các lệnh và patterns | Tra cứu |
+| **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | Giải quyết lỗi thường gặp | Khi cần |
+
+### Cho Giảng Viên
+
+| Tài liệu | Mô tả |
+|----------|-------|
+| **[INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md)** | Hướng dẫn chấm điểm và đánh giá |
+
+### Cách Sử Dụng
+
+1. **Trước lab:** Đọc [CODE_LAB.md](CODE_LAB.md) để hiểu tổng quan
+2. **Trong lab:** Làm theo từng Part, tham khảo [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+3. **Gặp lỗi:** Xem [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+4. **Sau lab:** Nộp Part 6 Final Project để chấm điểm

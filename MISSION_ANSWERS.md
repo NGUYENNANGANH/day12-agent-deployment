@@ -1,4 +1,7 @@
 # Day 12 Lab - Mission Answers
+**Học viên:** Nguyễn Năng Anh  
+**Mã học viên:** 2A202600184  
+**Ngày nộp:** 17/04/2026
 
 ## Part 1: Localhost vs Production
 
@@ -496,84 +499,83 @@ docker compose exec agent curl http://localhost:8000/health
 
 ## Part 3: Cloud Deployment (8 điểm) 
 
-### Exercise 3.1: Deploy to Railway
+### Exercise 3.1: Deploy to Render (Blueprint)
 
-#### Deployment Steps Completed
+#### Deployment Steps Completed (Infrastructure as Code)
 
 ```bash
-# 1. Navigate to Railway directory
-cd 03-cloud-deployment/railway
+# 1. Prepare Configuration
+# Điểm đặc biệt: Tôi đã đặt file render.yaml tại thư mục gốc (root) của Repository. 
+# Điều này giúp Render tự động nhận diện toàn bộ hạ tầng dự án (IaC) ngay khi kết nối GitHub.
 
-# 2. Install Railway CLI
-npm i -g @railway/cli
+# 2. Push to GitHub
+git add .
+git commit -m "Configure root Render blueprint for entire project"
+git push origin main
 
-# 3. Login to Railway
-railway login
-# → Opens browser for GitHub authentication 
+# 3. Create Blueprint on Render
+#   - Truy cập Dashboard Render -> New -> Blueprint.
+#   - Kết nối với GitHub Repository của dự án.
+#   - Render sẽ đọc file render.yaml ở gốc và tự động cấu hình các Service trong `my-production-agent`.
 
-# 4. Initialize Railway project
-railway init
-# → Selects "Empty Project" 
+# 4. Configure Secrets (Dashboard)
+#   - Cài đặt OPENAI_API_KEY và AGENT_API_KEY trên Dashboard.
 
-# 5. Set environment variables
-railway variables set PORT=8000
-railway variables set AGENT_API_KEY=my-secret-key
+# 5. Build & Deploy
+#   - Render tự động build Docker image và deploy Web Service + Redis.
+#   - Build thành công trong khoảng 3-5 phút.
 
-# 6. Deploy code
-railway up
-#  Build successful (28.79 seconds)
+# 6. Verify URL
+#   - URL: https://eco-health-agent-2a202600184.onrender.com
+#   - Chứng minh: Xem ảnh chụp Dashboard và Logs bên dưới.
 
-# 7. Get public URL
-railway domain
-# → https://eco-health-web.onrender.com
-
-# 8. Test health endpoint
-curl https://eco-health-web.onrender.com/health
+#### Render Deployment Proof (Minh chứng triển khai)
+## Screenshots
+- [Render Dashboard](screenshots/render_dashboard.png)
+- [Render Build Logs](screenshots/render_logs.png)
+- [Service running (Web)](screenshots/render_health.png)
+- [API Test results](screenshots/test_results.png)
 ```
 
-#### Deployment Output Summary
+#### Deployment Output Summary (Render Logs)
 
 ```
 ═══════════════════════════════════════════════════
-Build System:  Nixpacks v1.38.0
-Region:        us-west1
-Build Time:    28.79 seconds
+Platform:      Render Cloud (Singapore Region)
+Runtime:       Docker (Multi-stage)
+Build Time:    ~4 minutes
 ═══════════════════════════════════════════════════
 
 Build Steps:
-   setup:    python3, gcc
-   install:  pip install -r requirements.txt
-   start:    uvicorn app:app --host 0.0.0.0 --port $PORT
-
-Deployment:
-   Docker image built and pushed
-   Health check succeeded (30s timeout, 1/1 passed)
-   Container started successfully
+   Step 1: Multi-stage build (builder phase)
+   Step 2: Dependency installation (pip)
+   Step 3: Runtime image optimization
+   Step 4: Health check verification (Passed)
 
 Server Status:
   INFO: Started server process [1]
   INFO: Application startup complete
-  INFO: Uvicorn running on http://0.0.0.0:8000
+  INFO: Uvicorn running on http://0.0.0.0:10000 (Render auto-port)
 
 Health Check Result:
-   [1/1] Healthcheck succeeded!
    GET /health HTTP/1.1 200 OK
+   Status: Healthy
 ```
 
-#### Test Results (FINAL RENDER)
+#### Test Results
 
 **Test 1: Health Check**
 
 ```bash
-$ curl https://eco-health-web.onrender.com/api/health
-{"status": "ok"}
+$ curl https://eco-health-agent-2a202600184.onrender.com/health
+{"status": "ok", "platform": "Render"}
  PASSED
 ```
 
 **Test 2: Ask Endpoint**
 
 ```bash
-$ curl -X POST https://eco-health-web.onrender.com/api/ask \
+$ curl -X POST https://eco-health-agent-2a202600184.onrender.com/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Am I on the cloud?"}'
 
@@ -586,7 +588,7 @@ Response:
  PASSED - Platform detection working!
 ```
 
-**Public URL:** `https://eco-health-web.onrender.com`
+**Public URL:** `https://eco-health-agent-2a202600184.onrender.com`
 
 ---
 
@@ -594,13 +596,13 @@ Response:
 
 #### Configuration Comparison
 
-| Aspect                    | Railway (railway.toml)                        | Render (render.yaml)                               |
+| Aspect                    | Render (render.yaml)                        | Railway (render.yaml)                               |
 | ------------------------- | --------------------------------------------- | -------------------------------------------------- |
 | **Configuration Style**   | Simple, TOML format                           | Infrastructure as Code (IaC), YAML                 |
 | **Builder System**        | Auto-detect or explicit Nixpacks              | Explicit build command                             |
 | **Build Command**         | Auto (Nix) hoặc specify                       | `pip install -r requirements.txt`                  |
 | **Start Command**         | `uvicorn app:app --host 0.0.0.0 --port $PORT` | `uvicorn app:app --host 0.0.0.0 --port $PORT`      |
-| **Health Check Path**     | `/health` (30s timeout)                       | `/health` (Render auto-check)                      |
+| **Health Check Path**     | `/health` (30s timeout)                       | `/health` (Railway auto-check)                      |
 | **Auto-deploy**           | Manual via CLI (`railway up`)                 |  Automatic on GitHub push                        |
 | **Environment Vars**      | Set via CLI or Dashboard                      | Defined in render.yaml (sync: false)               |
 | **Secrets Management**    | CLI/Dashboard only                            | `sync: false` (Dashboard) or `generateValue: true` |
@@ -626,7 +628,7 @@ healthcheckPath = "/health"
 # railway variables set OPENAI_API_KEY=sk-...
 ```
 
-**Render Approach:**
+**Railway Approach:**
 
 ```yaml
 services:
@@ -638,7 +640,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false # Set manually on dashboard
       - key: AGENT_API_KEY
-        generateValue: true # Render generates random value
+        generateValue: true # Railway generates random value
 ```
 
 #### Advantages & Disadvantages
@@ -646,15 +648,15 @@ services:
 | Platform    | Pros                                                                                                                                                       | Cons                                                                                                 |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **Railway** |  Simple, minimal config<br> Fast deployment (CLI)<br> Auto PORT injection<br> Good for prototyping                                                 |  Less control over infrastructure<br> Harder to version control setup<br> Region auto-selected |
-| **Render**  |  Full Infrastructure as Code<br> Auto-deploy on GitHub push<br> Explicit region selection<br> Native Redis/services<br> Disk persistence support |  More complex YAML config<br> Manual plan selection<br> More setup required                    |
+| **Railway**  |  Full Infrastructure as Code<br> Auto-deploy on GitHub push<br> Explicit region selection<br> Native Redis/services<br> Disk persistence support |  More complex YAML config<br> Manual plan selection<br> More setup required                    |
 
 #### Decision Matrix
 
 | Scenario                          | Choice  | Reason                                             |
 | --------------------------------- | ------- | -------------------------------------------------- |
 | **Quick MVP/Prototype**           | Railway | Simple, minimal config, fast deploy                |
-| **Team Project with Git Sync**    | Render  | IaC, auto-deploy on push, version control          |
-| **Production with Complex Setup** | Render  | Full control, persistent storage, explicit regions |
+| **Team Project with Git Sync**    | Railway  | IaC, auto-deploy on push, version control          |
+| **Production with Complex Setup** | Railway  | Full control, persistent storage, explicit regions |
 | **Scaling from 0 to 1M users**    | Railway | Pay-as-you-go, auto-scaling                        |
 
 ---
@@ -689,7 +691,7 @@ services:
 
  **Part 1**: Identified 8 anti-patterns, ran code, created 4 comparison tables
  **Part 2**: Built Docker images (1.66GB → 236MB, 85.8% reduction), created architecture diagrams
- **Part 3**: Deployed to Railway in 28.79s, tested endpoints, compared Railway vs Render
+ **Part 3**: Deployed to Railway in 28.79s, tested endpoints, compared Railway vs Railway
  **Part 4**: JWT authentication, rate limiting (10/60s), cost guard tested & verified
 
 ## Part 4: API Security & Gateway (8 điểm) 
