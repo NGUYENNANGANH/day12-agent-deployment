@@ -1,20 +1,18 @@
-# Day 12 Lab - Deployment Information (RAILWAY)
+# Day 12 Lab - Deployment Information (RENDER)
 **Student:** Nguyễn Năng Anh (2A202600184)
 
-## Public Service URL
-**https://eco-health-api.onrender.com**
+## 🌐 Live Access
+- **Frontend (Giao diện người dùng):** [https://eco-health-web.onrender.com](https://eco-health-web.onrender.com)
+- **Backend (API Endpoint):** `https://eco-health-api.onrender.com`
 
-## Tech Stack
+## Platform
+Render (Docker Runtime)
+
+## tech Stack
 - **Backend**: FastAPI (Python 3.11)
-- **Deployment**: Render (Blueprint/Docker)
+- **Deployment**: Render Blueprint (Infrastructure as Code)
+- **Database**: Redis (Native Render Service)
 - **Security**: JWT Authentication + Rate Limiting
-- **Reliability**: Health Check + Graceful Shutdown implemented
-
-## Core Features Verified
-- **Health Check**: Endpoint `/health` returns `200 OK`.
-- **JWT Auth**: Protected `/ask` endpoint (401 without token).
-- **Rate Limiting**: Integrated sliding window (10 requests/min).
-- **Cost Guard**: Token usage tracking enabled.
 
 ## Verification Commands
 
@@ -24,13 +22,22 @@ curl https://eco-health-api.onrender.com/health
 ```
 **Expected Response**: `{"status": "ok", ...}`
 
-### 2. Protected Endpoint (Authentication required)
+### 2. API Test (Protection Check)
 ```bash
-curl -i https://eco-health-api.onrender.com/ask
+curl -i https://eco-health-api.onrender.com/api/ask
 ```
-**Expected Response**: `401 Unauthorized`
+**Expected Response**: `401 Unauthorized` (Chứng minh API đã được bảo vệ)
 
-## Environment Variables Configuration (Railway)
+## Environment Variables Configuration
 - `PORT`: 8000
-- `AGENT_API_KEY`: [SECRET_KEY]
+- `AGENT_API_KEY`: [Configured on Render Dashboard]
+- `OPENAI_API_KEY`: [Configured on Render Dashboard]
 - `ENVIRONMENT`: production
+- `MONGO_URI`: [Configured on Render Dashboard]
+
+## Screenshots
+- [Deployment Dashboard](screenshots/render_dashboard.png)
+- [Service Running/Logs](screenshots/render_logs.png)
+- [Health Check Result](screenshots/render_health.png)
+- [Rate Limiting Test](screenshots/4.3.png)
+- [Cost Guard Tracking](screenshots/4.2.png)

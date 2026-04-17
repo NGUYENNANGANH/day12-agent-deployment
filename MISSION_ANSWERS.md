@@ -503,43 +503,26 @@ docker compose exec agent curl http://localhost:8000/health
 
 #### Deployment Steps Completed (Infrastructure as Code)
 
-```bash
-# 1. Prepare Configuration
-# Điểm đặc biệt: Tôi đã đặt file render.yaml tại thư mục gốc (root) của Repository. 
-# Điều này giúp Render tự động nhận diện toàn bộ hạ tầng dự án (IaC) ngay khi kết nối GitHub.
+Tôi đã sử dụng Render Blueprint (IaC) để triển khai toàn bộ hệ thống (API, Redis). File `render.yaml` được đặt tại thư mục gốc để Render tự động nhận diện hạ tầng.
 
-# 2. Push to GitHub
-git add .
-git commit -m "Configure root Render blueprint for entire project"
-git push origin main
-
-# 3. Create Blueprint on Render
-#   - Truy cập Dashboard Render -> New -> Blueprint.
-#   - Kết nối với GitHub Repository của dự án.
-#   - Render sẽ đọc file render.yaml ở gốc và tự động cấu hình các Service trong `my-production-agent`.
-
-# 4. Configure Secrets (Dashboard)
-#   - Cài đặt OPENAI_API_KEY và AGENT_API_KEY trên Dashboard.
-
-# 5. Build & Deploy
-#   - Render tự động build Docker image và deploy Web Service + Redis.
-#   - Build thành công trong khoảng 3-5 phút.
-
-# 6. Verify URL
-#   - URL: https://eco-health-api.onrender.com
-#   - Chứng minh: Xem ảnh chụp Dashboard và Logs bên dưới.
+**Các bước thực hiện:**
+1. Cấu hình file `render.yaml` tại root repository.
+2. Push toàn bộ code lên GitHub.
+3. Trên Render Dashboard, chọn **New > Blueprint** và kết nối với repository.
+4. Render tự động tạo ra: **eco-health-api** (Web Service) và **eco-health-redis** (Redis Instance).
 
 #### Render Deployment Proof (Minh chứng triển khai)
+
 ## Screenshots
-- [Render Dashboard](screenshots/render_dashboard.png)
-- [Render Build Logs](screenshots/render_logs.png)
-- [Service running (Web)](screenshots/render_health.png)
-- [API Test results](screenshots/test_results.png)
-```
+
+- ![Render Dashboard](screenshots/render_dashboard.png)
+- ![Render Build Logs](screenshots/render_logs.png)
+- ![Service running (Web)](screenshots/render_health.png)
+- ![API Test results (Security/Scaling)](screenshots/4.2.png)
 
 #### Deployment Output Summary (Render Logs)
 
-```
+```bash
 ═══════════════════════════════════════════════════
 Platform:      Render Cloud (Singapore Region)
 Runtime:       Docker (Multi-stage)
@@ -575,7 +558,7 @@ $ curl https://eco-health-api.onrender.com/health
 **Test 2: Ask Endpoint**
 
 ```bash
-$ curl -X POST https://eco-health-api.onrender.com/ask \
+$ curl -X POST https://eco-health-api.onrender.com/api/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Am I on the cloud?"}'
 
@@ -588,7 +571,8 @@ Response:
  PASSED - Platform detection working!
 ```
 
-**Public URL:** `https://eco-health-api.onrender.com`
+- **Public URL (Web):** [https://eco-health-web.onrender.com](https://eco-health-web.onrender.com)
+- **API Endpoint (Backend):** `https://eco-health-api.onrender.com`
 
 ---
 
@@ -1099,9 +1083,9 @@ async def security_headers(request: Request, call_next):
 
 **Test Verification:**
 
--  JWT token generation working
--  Rate limiter enforcing 10 req/60s limit
--  Cost guard tracking budget (budget_remaining_usd)
+-  JWT token generation working: ![4.1.png](screenshots/4.1.png)
+-  Cost guard tracking budget: ![4.2.png](screenshots/4.2.png)
+-  Rate limiter enforcing 10 req/60s limit: ![4.3.png](screenshots/4.3.png)
 -  Security headers present in response
 
 ---
@@ -1445,8 +1429,8 @@ Each agent:
 
 **Test Verification:**
 
--  Health check responding correctly
--  3 Docker containers running independently
+- ![Health check responding correctly](screenshots/5.1.png)
+- ![3 Docker containers running independently](screenshots/5.2.png)
 -  Nginx load balancer routing requests
 -  Redis maintaining session across instances
 -  Conversation history preserved (10 messages, 5 requests)
@@ -1586,7 +1570,7 @@ def ready():
     """Readiness probe"""
     return {"ready": True, "in_flight_requests": count}
 
-@app.post("/ask")
+@app.post("/api/ask")
 def ask(request: AskRequest, api_key: str = Header(...)):
     """Process question with API Key auth + rate limiting"""
     # 1. API Key validation
@@ -1666,7 +1650,7 @@ docker compose up
 
 1.  **Anti-pattern Analysis** (Part 1) — 8 critical issues identified
 2.  **Container Optimization** (Part 2) — 85.8% size reduction (1.66GB → 236MB)
-3.  **Live Deployment** (Part 3) — Render app running at https://eco-health-web.onrender.com with Nginx + FastAPI + Redis.
+3.  **Live Deployment** (Part 3) — Render app running at [https://eco-health-web.onrender.com](https://eco-health-web.onrender.com) with Nginx + FastAPI + Redis.
 4.  **Security Hardening** (Part 4) — JWT + Rate limiting + Cost guard
 5.  **Horizontal Scaling** (Part 5) — 3 instances with Redis session persistence
 6.  **Production Integration** (Part 6) — 20/20 readiness checks passed
