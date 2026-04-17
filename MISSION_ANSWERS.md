@@ -14,7 +14,7 @@
 
 ### Exercise 1.3: Comparison table
 
-| Feature      | Develop (❌)        | Production (✅)               | Why Important?                                             |
+| Feature      | Develop ()        | Production ()               | Why Important?                                             |
 | ------------ | ------------------- | ----------------------------- | ---------------------------------------------------------- |
 | Config       | Hardcode trong code | Đọc từ env vars               | Dễ thay đổi giữa dev/staging/production, không cần rebuild |
 | Secrets      | `"sk-abc123"`       | `os.getenv("OPENAI_API_KEY")` | Không lộ secrets khi push code lên GitHub                  |
@@ -34,27 +34,27 @@
 
 ---
 
-## Part 2: Docker Containerization (8 điểm) ✅
+## Part 2: Docker Containerization (8 điểm) 
 
 ### Exercise 2.1: Analyze Dockerfiles
 
 #### Comparison Table: Develop vs Production Dockerfile
 
-| Khía cạnh              | Develop (❌)              | Production (✅)                   | Ý nghĩa                |
+| Khía cạnh              | Develop ()              | Production ()                   | Ý nghĩa                |
 | ---------------------- | ------------------------- | --------------------------------- | ---------------------- |
 | **Base Image**         | `python:3.11` (~1GB full) | `python:3.11-slim` (~200MB)       | Slim nhỏ hơn 5x        |
 | **Build Strategy**     | Single-stage              | Multi-stage (builder + runtime)   | Discard build tools    |
 | **User**               | root (default)            | Non-root `appuser`                | Security best practice |
-| **Build Dependencies** | ❌ Không cài              | ✅ gcc, libpq-dev (builder stage) | Compile C extensions   |
+| **Build Dependencies** |  Không cài              |  gcc, libpq-dev (builder stage) | Compile C extensions   |
 | **Package Install**    | Global pip                | `pip --user` (→ /root/.local)     | Dễ copy sang stage 2   |
-| **Apt Cache Cleanup**  | ❌ Không                  | ✅ `rm -rf /var/lib/apt/lists/*`  | Giảm layer size        |
-| **Health Check**       | ❌ Không                  | ✅ HEALTHCHECK curl /health       | Auto-restart on fail   |
+| **Apt Cache Cleanup**  |  Không                  |  `rm -rf /var/lib/apt/lists/*`  | Giảm layer size        |
+| **Health Check**       |  Không                  |  HEALTHCHECK curl /health       | Auto-restart on fail   |
 | **Workers**            | Default (1)               | 2 workers (`--workers 2`)         | Concurrency            |
-| **Layer Optimization** | ❌ Tất cả 1 stage         | ✅ Copy requirements first        | Docker cache benefit   |
+| **Layer Optimization** |  Tất cả 1 stage         |  Copy requirements first        | Docker cache benefit   |
 
 #### Dockerfile Code Comparison
 
-**Develop - Single Stage (❌ Anti-pattern):**
+**Develop - Single Stage ( Anti-pattern):**
 
 ```dockerfile
 FROM python:3.11                          # Full Python 1GB (includes build tools)
@@ -67,7 +67,7 @@ CMD ["python", "app.py"]
 # Result: ~900 MB final image
 ```
 
-**Production - Multi-Stage (✅ Best Practice):**
+**Production - Multi-Stage ( Best Practice):**
 
 ```dockerfile
 # STAGE 1: Builder (intermediate, discarded after build)
@@ -115,7 +115,7 @@ docker images | findstr agent
 | --------------------------- | --------------------- | ------ | ------------------ | ---------------------------------- |
 | **agent-develop:latest**    | **1.66 GB** (1660 MB) | 8      | python:3.11 (full) | Single-stage, includes build tools |
 | **agent-production:latest** | **236 MB**            | 12     | python:3.11-slim   | Multi-stage, only runtime          |
-| **Difference**              | **1.424 GB saved** ✅ | -      | -                  | **85.8% smaller** 🎉               |
+| **Difference**              | **1.424 GB saved**  | -      | -                  | **85.8% smaller**                |
 
 **Size Calculation (Actual Results):**
 
@@ -123,7 +123,7 @@ docker images | findstr agent
 Develop:    1660 MB
 Production:  236 MB
 Saved:      1424 MB
-Percentage: (1424/1660) × 100 = 85.8% smaller ✅
+Percentage: (1424/1660) × 100 = 85.8% smaller 
 
 Better than expected 67% by 18.8%!
 ```
@@ -163,7 +163,7 @@ docker run -p 8000:8000 `
 
 **2. Multi-stage Build Strategy (20% của improvement)**
 
-Single-stage (❌):
+Single-stage ():
 
 ```dockerfile
 FROM python:3.11  # 1.1GB
@@ -172,7 +172,7 @@ RUN pip install numpy scipy  # Compile using gcc → binaries in image
 CMD ["uvicorn", "main:app"]  # Final: 1660MB (includes gcc)
 ```
 
-Multi-stage (✅):
+Multi-stage ():
 
 ```dockerfile
 FROM python:3.11-slim AS builder
@@ -214,13 +214,13 @@ COPY --from=builder /root/.local .  # Copy only site-packages
 **Security Comparison:**
 
 ```dockerfile
-# ❌ Develop Anti-patterns
+#  Develop Anti-patterns
 FROM python:3.11           # Full image + build tools
 # No user specified → runs as root (security risk!)
 EXPOSE 8000
 CMD ["python", "app.py"]
 
-# ✅ Production Best Practices
+#  Production Best Practices
 FROM python:3.11-slim
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 USER appuser               # Non-root (secure)
@@ -334,13 +334,13 @@ Build Stage:
 
 Size Comparison:
 ┌─────────────────────────────────────────┐
-│ Single-stage (❌ current file):          │
+│ Single-stage ( current file):          │
 │  python:3.11 + gcc + pip + code          │
 │  = 900 MB final image                    │
 └─────────────────────────────────────────┘
          ⬇️  vs  ⬇️
 ┌─────────────────────────────────────────┐
-│ Multi-stage (✅ better):                 │
+│ Multi-stage ( better):                 │
 │  Builder: 400MB (discarded)              │
 │  Runtime: 300MB (deployed)               │
 │  = 300 MB final image (67% smaller!)     │
@@ -380,7 +380,7 @@ Size Comparison:
 │  ├─ :8000      │  ├─ :8000          │  ├─ :6379           │   │
 │  ├─ FastAPI    │  ├─ FastAPI        │  ├─ Cache           │   │
 │  ├─ 2 workers  │  ├─ 2 workers      │  ├─ Session store   │   │
-│  ├─ Health: ✅  │  ├─ Health: ✅     │  ├─ Health: ✅      │   │
+│  ├─ Health:   │  ├─ Health:      │  ├─ Health:       │   │
 │  └──────┬───────┘  └────────┬────────┘  └───────────────────┘   │
 │         │                   │                   ▲                │
 │         └───────────────────┼───────────────────┘                │
@@ -391,7 +391,7 @@ Size Comparison:
 │                 ├─ :6333                 │                      │
 │                 ├─ Vector Database       │                      │
 │                 ├─ RAG storage           │                      │
-│                 └─ Health: ✅            │                      │
+│                 └─ Health:             │                      │
 │                                                                  │
 └──────────────────────────────────────────────────────────────────┘
 
@@ -428,7 +428,7 @@ services:
       - PORT=8000
       - REDIS_URL=redis://redis:6379/0
       - QDRANT_URL=http://qdrant:6333
-      # ✅ Secrets via env_file (not in git)
+      #  Secrets via env_file (not in git)
     env_file:
       - .env.local
     depends_on:
@@ -440,10 +440,10 @@ services:
 
 **Key Points:**
 
-- ✅ Service discovery: `redis://redis:6379` (Docker DNS)
-- ✅ Health checks: Wait for services before starting
-- ✅ Environment variables: Config from outside
-- ✅ Secrets: `.env.local` in `.gitignore`
+-  Service discovery: `redis://redis:6379` (Docker DNS)
+-  Health checks: Wait for services before starting
+-  Environment variables: Config from outside
+-  Secrets: `.env.local` in `.gitignore`
 
 #### Scaling & Deployment
 
@@ -473,11 +473,11 @@ docker compose exec agent curl http://localhost:8000/health
 | Aspect           | Single Container | Docker Compose Stack           |
 | ---------------- | ---------------- | ------------------------------ |
 | **Services**     | Agent only       | Agent + Redis + Qdrant + Nginx |
-| **State**        | ✗ Stateless      | ✓ Persistent (Redis)           |
-| **Search**       | ✗ Not supported  | ✓ Vector search (Qdrant)       |
-| **Load Balance** | ✗ Single         | ✓ Nginx load balancer          |
-| **Scalability**  | ✗ Manual         | ✓ `--scale` command            |
-| **Health Check** | ✓ 1 endpoint     | ✓ 4 endpoints (all monitored)  |
+| **State**        |  Stateless      |  Persistent (Redis)           |
+| **Search**       |  Not supported  |  Vector search (Qdrant)       |
+| **Load Balance** |  Single         |  Nginx load balancer          |
+| **Scalability**  |  Manual         |  `--scale` command            |
+| **Health Check** |  1 endpoint     |  4 endpoints (all monitored)  |
 | **Complexity**   | Simple           | Orchestrated                   |
 
 ---
@@ -486,15 +486,15 @@ docker compose exec agent curl http://localhost:8000/health
 
 | Tiêu chí                      | Status                          | Điểm      |
 | ----------------------------- | ------------------------------- | --------- |
-| **2.1: Analyze Dockerfiles**  | ✅ Comparison table + code      | 2/2       |
-| **2.2: Build & Compare**      | ✅ Size metrics (900MB → 300MB) | 3/3       |
-| **2.3: Answer Questions**     | ✅ 3 detailed explanations      | 3/3       |
-| **2.4: Architecture Diagram** | ✅ Docker Compose stack diagram | 2/2       |
-| **Part 2 Total**              | ✅ **Complete** 🎉              | **10/10** |
+| **2.1: Analyze Dockerfiles**  |  Comparison table + code      | 2/2       |
+| **2.2: Build & Compare**      |  Size metrics (900MB → 300MB) | 3/3       |
+| **2.3: Answer Questions**     |  3 detailed explanations      | 3/3       |
+| **2.4: Architecture Diagram** |  Docker Compose stack diagram | 2/2       |
+| **Part 2 Total**              |  **Complete**               | **10/10** |
 
 ---
 
-## Part 3: Cloud Deployment (8 điểm) ✅
+## Part 3: Cloud Deployment (8 điểm) 
 
 ### Exercise 3.1: Deploy to Railway
 
@@ -509,11 +509,11 @@ npm i -g @railway/cli
 
 # 3. Login to Railway
 railway login
-# → Opens browser for GitHub authentication ✅
+# → Opens browser for GitHub authentication 
 
 # 4. Initialize Railway project
 railway init
-# → Selects "Empty Project" ✅
+# → Selects "Empty Project" 
 
 # 5. Set environment variables
 railway variables set PORT=8000
@@ -521,7 +521,7 @@ railway variables set AGENT_API_KEY=my-secret-key
 
 # 6. Deploy code
 railway up
-# ✅ Build successful (28.79 seconds)
+#  Build successful (28.79 seconds)
 
 # 7. Get public URL
 railway domain
@@ -541,14 +541,14 @@ Build Time:    28.79 seconds
 ═══════════════════════════════════════════════════
 
 Build Steps:
-  ✅ setup:    python3, gcc
-  ✅ install:  pip install -r requirements.txt
-  ✅ start:    uvicorn app:app --host 0.0.0.0 --port $PORT
+   setup:    python3, gcc
+   install:  pip install -r requirements.txt
+   start:    uvicorn app:app --host 0.0.0.0 --port $PORT
 
 Deployment:
-  ✅ Docker image built and pushed
-  ✅ Health check succeeded (30s timeout, 1/1 passed)
-  ✅ Container started successfully
+   Docker image built and pushed
+   Health check succeeded (30s timeout, 1/1 passed)
+   Container started successfully
 
 Server Status:
   INFO: Started server process [1]
@@ -556,8 +556,8 @@ Server Status:
   INFO: Uvicorn running on http://0.0.0.0:8000
 
 Health Check Result:
-  ✅ [1/1] Healthcheck succeeded!
-  ✅ GET /health HTTP/1.1 200 OK
+   [1/1] Healthcheck succeeded!
+   GET /health HTTP/1.1 200 OK
 ```
 
 #### Test Results
@@ -567,7 +567,7 @@ Health Check Result:
 ```bash
 $ curl https://lab12-production-651a.up.railway.app/health
 {"status": "ok", ...}
-✅ PASSED
+ PASSED
 ```
 
 **Test 2: Ask Endpoint**
@@ -583,7 +583,7 @@ Response:
   "answer": "Tôi là AI agent được deploy lên cloud. Câu hỏi của bạn đã được nhận.",
   "platform": "Railway"
 }
-✅ PASSED - Platform detection working!
+ PASSED - Platform detection working!
 ```
 
 **Public URL:** `https://lab12-production-651a.up.railway.app`
@@ -601,13 +601,13 @@ Response:
 | **Build Command**         | Auto (Nix) hoặc specify                       | `pip install -r requirements.txt`                  |
 | **Start Command**         | `uvicorn app:app --host 0.0.0.0 --port $PORT` | `uvicorn app:app --host 0.0.0.0 --port $PORT`      |
 | **Health Check Path**     | `/health` (30s timeout)                       | `/health` (Render auto-check)                      |
-| **Auto-deploy**           | Manual via CLI (`railway up`)                 | ✅ Automatic on GitHub push                        |
+| **Auto-deploy**           | Manual via CLI (`railway up`)                 |  Automatic on GitHub push                        |
 | **Environment Vars**      | Set via CLI or Dashboard                      | Defined in render.yaml (sync: false)               |
 | **Secrets Management**    | CLI/Dashboard only                            | `sync: false` (Dashboard) or `generateValue: true` |
 | **Region Selection**      | Auto-detect                                   | Explicit in config (`region: singapore`)           |
 | **Pricing Plan**          | Automatic scaling                             | Manual (free, starter, standard, pro)              |
-| **Add-ons Support**       | Redis, PostgreSQL (marketplace)               | ✅ Native Redis service (`type: redis`)            |
-| **Disk Persistence**      | ❌ Not native                                 | ✅ `disk` section in config                        |
+| **Add-ons Support**       | Redis, PostgreSQL (marketplace)               |  Native Redis service (`type: redis`)            |
+| **Disk Persistence**      |  Not native                                 |  `disk` section in config                        |
 | **Configuration Storage** | .toml (can be in git)                         | .yaml in git (infrastructure as code)              |
 
 #### Key Differences
@@ -645,8 +645,8 @@ services:
 
 | Platform    | Pros                                                                                                                                                       | Cons                                                                                                 |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Railway** | ✅ Simple, minimal config<br>✅ Fast deployment (CLI)<br>✅ Auto PORT injection<br>✅ Good for prototyping                                                 | ❌ Less control over infrastructure<br>❌ Harder to version control setup<br>❌ Region auto-selected |
-| **Render**  | ✅ Full Infrastructure as Code<br>✅ Auto-deploy on GitHub push<br>✅ Explicit region selection<br>✅ Native Redis/services<br>✅ Disk persistence support | ❌ More complex YAML config<br>❌ Manual plan selection<br>❌ More setup required                    |
+| **Railway** |  Simple, minimal config<br> Fast deployment (CLI)<br> Auto PORT injection<br> Good for prototyping                                                 |  Less control over infrastructure<br> Harder to version control setup<br> Region auto-selected |
+| **Render**  |  Full Infrastructure as Code<br> Auto-deploy on GitHub push<br> Explicit region selection<br> Native Redis/services<br> Disk persistence support |  More complex YAML config<br> Manual plan selection<br> More setup required                    |
 
 #### Decision Matrix
 
@@ -663,9 +663,9 @@ services:
 
 | Tiêu chí                   | Status                               | Điểm    |
 | -------------------------- | ------------------------------------ | ------- |
-| **3.1: Deploy to Railway** | ✅ Success (28.79s build, health OK) | 4/4     |
-| **3.2: Compare Config**    | ✅ Comparison table + analysis       | 4/4     |
-| **Part 3 Total**           | ✅ **Complete** 🎉                   | **8/8** |
+| **3.1: Deploy to Railway** |  Success (28.79s build, health OK) | 4/4     |
+| **3.2: Compare Config**    |  Comparison table + analysis       | 4/4     |
+| **Part 3 Total**           |  **Complete**                    | **8/8** |
 
 **URL Deployed:** `https://lab12-production-651a.up.railway.app`
 
@@ -679,20 +679,20 @@ services:
 
 | Part       | Topic                   | Status      | Points    |
 | ---------- | ----------------------- | ----------- | --------- |
-| **Part 1** | Localhost vs Production | ✅ Complete | **8/8**   |
-| **Part 2** | Docker Containerization | ✅ Complete | **10/10** |
-| **Part 3** | Cloud Deployment        | ✅ Complete | **8/8**   |
-| **Part 4** | API Security            | ✅ Complete | **8/8**   |
+| **Part 1** | Localhost vs Production |  Complete | **8/8**   |
+| **Part 2** | Docker Containerization |  Complete | **10/10** |
+| **Part 3** | Cloud Deployment        |  Complete | **8/8**   |
+| **Part 4** | API Security            |  Complete | **8/8**   |
 | **TOTAL**  | -                       | **34/40**   | **34/40** |
 
 ### Completed Achievements
 
-✅ **Part 1**: Identified 8 anti-patterns, ran code, created 4 comparison tables
-✅ **Part 2**: Built Docker images (1.66GB → 236MB, 85.8% reduction), created architecture diagrams
-✅ **Part 3**: Deployed to Railway in 28.79s, tested endpoints, compared Railway vs Render
-✅ **Part 4**: JWT authentication, rate limiting (10/60s), cost guard tested & verified
+ **Part 1**: Identified 8 anti-patterns, ran code, created 4 comparison tables
+ **Part 2**: Built Docker images (1.66GB → 236MB, 85.8% reduction), created architecture diagrams
+ **Part 3**: Deployed to Railway in 28.79s, tested endpoints, compared Railway vs Render
+ **Part 4**: JWT authentication, rate limiting (10/60s), cost guard tested & verified
 
-## Part 4: API Security & Gateway (8 điểm) ✅
+## Part 4: API Security & Gateway (8 điểm) 
 
 ### Concepts
 
@@ -710,7 +710,7 @@ services:
 
 **Phân tích code: `04-api-gateway/develop/app.py`**
 
-❌ **Simple API Key (Basic Authentication)**
+ **Simple API Key (Basic Authentication)**
 
 ```python
 # Dễ dàng nhưng ít bảo mật
@@ -730,11 +730,11 @@ def ask_agent(body: AskRequest, x_api_key: str = Header(None)):
 
 ---
 
-### Exercise 4.2: JWT Authentication (Production) ✅
+### Exercise 4.2: JWT Authentication (Production) 
 
 **Phân tích code: `04-api-gateway/production/auth.py`**
 
-✅ **JWT Authentication (Advanced)**
+ **JWT Authentication (Advanced)**
 
 ```python
 def create_token(username: str, role: str) -> str:
@@ -810,19 +810,19 @@ curl -X POST http://localhost:9000/auth/token \
 curl -H "Authorization: Bearer eyJhbGc..." \
   -X POST http://localhost:9000/ask \
   -d '{"question": "what is docker?"}'
-# ✅ Response: {"question": "...", "answer": "...", "usage": {...}}
+#  Response: {"question": "...", "answer": "...", "usage": {...}}
 ```
 
 **Key Advantages over API Key:**
 
-- ✅ Stateless (no DB lookup per request)
-- ✅ Expiry built-in (tokens automatically expire)
-- ✅ Role-based access control
-- ✅ Can be verified offline (only server needs secret)
+-  Stateless (no DB lookup per request)
+-  Expiry built-in (tokens automatically expire)
+-  Role-based access control
+-  Can be verified offline (only server needs secret)
 
 ---
 
-### Exercise 4.3: Rate Limiting ✅
+### Exercise 4.3: Rate Limiting 
 
 **Phân tích code: `04-api-gateway/production/rate_limiter.py`**
 
@@ -880,14 +880,14 @@ At t=85s:
 **Test Results from User:**
 
 ```bash
-# Requests 1-8: ✅ Success (under limit)
+# Requests 1-8:  Success (under limit)
 curl ... Test 1   → 200 OK, requests_remaining: 9
 curl ... Test 2   → 200 OK, requests_remaining: 8
 ...
 curl ... Test 8   → 200 OK, requests_remaining: 1
 curl ... Test 9   → 200 OK, requests_remaining: 0
 
-# Request 9-15: ❌ Rate Limit Hit
+# Request 9-15:  Rate Limit Hit
 curl ... Test 9   → 429 Rate limit exceeded, retry_after: 38
 curl ... Test 10  → 429 Rate limit exceeded, retry_after: 37
 curl ... Test 15  → 429 Rate limit exceeded, retry_after: 36
@@ -921,7 +921,7 @@ def check_redis(user_id: str):
 
 ---
 
-### Exercise 4.4: Cost Guard (Budget Protection) ✅
+### Exercise 4.4: Cost Guard (Budget Protection) 
 
 **Phân tích code: `04-api-gateway/production/cost_guard.py`**
 
@@ -1030,25 +1030,25 @@ def _get_record(self, user_id: str) -> UsageRecord:
 async def ask_agent(
     body: AskRequest,
     request: Request,
-    user: dict = Depends(verify_token),  # ✅ JWT auth
+    user: dict = Depends(verify_token),  #  JWT auth
 ):
     username = user["username"]
     role = user["role"]
 
-    # ✅ Step 1: Rate limiting (per role)
+    #  Step 1: Rate limiting (per role)
     limiter = rate_limiter_admin if role == "admin" else rate_limiter_user
     rate_info = limiter.check(username)
 
-    # ✅ Step 2: Cost guard (pre-flight check)
+    #  Step 2: Cost guard (pre-flight check)
     cost_guard.check_budget(username)
 
-    # ✅ Step 3: Call LLM
+    #  Step 3: Call LLM
     response_text = ask(body.question)
 
-    # ✅ Step 4: Record usage for billing
+    #  Step 4: Record usage for billing
     cost_guard.record_usage(username, input_tokens=10, output_tokens=50)
 
-    # ✅ Step 5: Return with usage info
+    #  Step 5: Return with usage info
     return {
         "question": body.question,
         "answer": response_text,
@@ -1066,16 +1066,16 @@ async def ask_agent(
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
 
-    # ✅ Prevent MIME type sniffing
+    #  Prevent MIME type sniffing
     response.headers["X-Content-Type-Options"] = "nosniff"
 
-    # ✅ Prevent clickjacking
+    #  Prevent clickjacking
     response.headers["X-Frame-Options"] = "DENY"
 
-    # ✅ Prevent XSS
+    #  Prevent XSS
     response.headers["X-XSS-Protection"] = "1; mode=block"
 
-    # ✅ Hide server version
+    #  Hide server version
     if "server" in response.headers:
         del response.headers["server"]
 
@@ -1088,23 +1088,23 @@ async def security_headers(request: Request, call_next):
 
 | Tiêu chí                        | Status                              | Điểm    |
 | ------------------------------- | ----------------------------------- | ------- |
-| **4.1: API Key Auth (Develop)** | ✅ Analyzed basic approach          | 1/1     |
-| **4.2: JWT Auth (Prod)**        | ✅ Analyzed + tested successfully   | 2/2     |
-| **4.3: Rate Limiting**          | ✅ Sliding window verified (10/60s) | 2/2     |
-| **4.4: Cost Guard**             | ✅ Budget tracking verified         | 2/2     |
-| **4.5: Security Stack**         | ✅ All integrated in app.py         | 1/1     |
-| **Part 4 Total**                | ✅ **Complete** 🎉                  | **8/8** |
+| **4.1: API Key Auth (Develop)** |  Analyzed basic approach          | 1/1     |
+| **4.2: JWT Auth (Prod)**        |  Analyzed + tested successfully   | 2/2     |
+| **4.3: Rate Limiting**          |  Sliding window verified (10/60s) | 2/2     |
+| **4.4: Cost Guard**             |  Budget tracking verified         | 2/2     |
+| **4.5: Security Stack**         |  All integrated in app.py         | 1/1     |
+| **Part 4 Total**                |  **Complete**                   | **8/8** |
 
 **Test Verification:**
 
-- ✅ JWT token generation working
-- ✅ Rate limiter enforcing 10 req/60s limit
-- ✅ Cost guard tracking budget (budget_remaining_usd)
-- ✅ Security headers present in response
+-  JWT token generation working
+-  Rate limiter enforcing 10 req/60s limit
+-  Cost guard tracking budget (budget_remaining_usd)
+-  Security headers present in response
 
 ---
 
-## Part 5: Scaling & Reliability (8 điểm) ✅
+## Part 5: Scaling & Reliability (8 điểm) 
 
 ### Concepts
 
@@ -1119,7 +1119,7 @@ async def security_headers(request: Request, call_next):
 
 ---
 
-### Exercise 5.1 & 5.2: Health Checks & Graceful Shutdown ✅
+### Exercise 5.1 & 5.2: Health Checks & Graceful Shutdown 
 
 **File: `05-scaling-reliability/develop/app.py`**
 
@@ -1136,7 +1136,7 @@ Response:
     "uptime_seconds": 5865.1,
     "container": true
 }
-✅ PASSED
+ PASSED
 
 # 2. /ready (Readiness Probe)
 # (Note: May require /ready endpoint fix in some versions)
@@ -1184,13 +1184,13 @@ async def lifespan(app: FastAPI):
     logger.info("Agent starting up...")
     time.sleep(0.2)  # simulate loading
     _is_ready = True
-    logger.info("✅ Agent is ready!")
+    logger.info(" Agent is ready!")
 
     yield
 
     # ── Shutdown ──
     _is_ready = False
-    logger.info("🔄 Graceful shutdown initiated...")
+    logger.info(" Graceful shutdown initiated...")
 
     # Chờ requests đang xử lý hoàn thành (tối đa 30s)
     timeout = 30
@@ -1200,7 +1200,7 @@ async def lifespan(app: FastAPI):
         time.sleep(1)
         elapsed += 1
 
-    logger.info("✅ Shutdown complete")
+    logger.info(" Shutdown complete")
 
 # Track requests
 @app.middleware("http")
@@ -1229,14 +1229,14 @@ Wait for in-flight requests (max 30s)
         ↓
 All requests completed
         ↓
-Log "✅ Shutdown complete"
+Log " Shutdown complete"
         ↓
 Process exits cleanly
 ```
 
 ---
 
-### Exercise 5.3 & 5.4: Stateless Design & Load Balancing ✅
+### Exercise 5.3 & 5.4: Stateless Design & Load Balancing 
 
 **Architecture:**
 
@@ -1281,7 +1281,7 @@ docker compose down
 
 ---
 
-### Exercise 5.5: Test Stateless Scaling ✅
+### Exercise 5.5: Test Stateless Scaling 
 
 **Test Script: `test_stateless.py`**
 
@@ -1317,7 +1317,7 @@ Request 5: [instance-fb8615]           ← Back to second instance
 ------------------------------------------------------------
 Total requests: 5
 Instances used: {'instance-600a15', 'instance-fb8615', 'instance-b3f694'}
-✅ All requests served despite different instances!
+ All requests served despite different instances!
 
 --- Conversation History ---
 Total messages: 10
@@ -1332,7 +1332,7 @@ Total messages: 10
   [user]: What is Redis used for?...
   [assistant]: Đây là câu trả lời từ AI agent (mock)...
 
-✅ Session history preserved across all instances via Redis!
+ Session history preserved across all instances via Redis!
 ```
 
 **Key Observations:**
@@ -1357,7 +1357,7 @@ Total messages: 10
 
 ### Why Stateless Design is Critical
 
-**❌ Stateful (Bad) - Single Instance Only:**
+** Stateful (Bad) - Single Instance Only:**
 
 ```python
 _sessions = {}  # Lưu trong memory của 1 instance
@@ -1369,7 +1369,7 @@ def chat(question: str, session_id: str):
     # Nếu request đến instance khác → KeyError!
 ```
 
-**❌ Problem Scenario:**
+** Problem Scenario:**
 
 ```
 Instance 1: User sends question 1
@@ -1380,7 +1380,7 @@ Instance 2: User sends question 2 (load balanced to different instance)
   → Conversation history lost!
 ```
 
-**✅ Stateless (Good) - Any Instance Works:**
+** Stateless (Good) - Any Instance Works:**
 
 ```python
 _redis = redis.from_url("redis://redis:6379/0")
@@ -1388,18 +1388,18 @@ _redis = redis.from_url("redis://redis:6379/0")
 @app.post("/chat")
 def chat(question: str, session_id: str):
     # Get conversation history from Redis
-    history = _redis.get(f"session:{session_id}")  # ✅ Works from ANY instance!
+    history = _redis.get(f"session:{session_id}")  #  Works from ANY instance!
     # Instance doesn't matter — all read from same Redis
 ```
 
-**✅ Stateless Scenario:**
+** Stateless Scenario:**
 
 ```
 Instance 1: User sends question 1
   → Redis.set("session:user123", [Q1, A1])
 
 Instance 2: User sends question 2 (load balanced to different instance)
-  → history = Redis.get("session:user123")  # ✅ Found!
+  → history = Redis.get("session:user123")  #  Found!
   → Conversation continues seamlessly!
 ```
 
@@ -1422,10 +1422,10 @@ docker compose up --scale agent=3    # 3 agents (Nginx load balances)
 docker compose up --scale agent=10   # 10 agents (each independent)
 
 Each agent:
-  ✅ Reads from shared Redis
-  ✅ Stateless (no local session storage)
-  ✅ Can crash without affecting others
-  ✅ Can be added/removed dynamically
+   Reads from shared Redis
+   Stateless (no local session storage)
+   Can crash without affecting others
+   Can be added/removed dynamically
 ```
 
 ---
@@ -1434,21 +1434,21 @@ Each agent:
 
 | Tiêu chí                        | Status                                        | Điểm    |
 | ------------------------------- | --------------------------------------------- | ------- |
-| **5.1: Health Checks**          | ✅ /health working, uptime tracked            | 1/1     |
-| **5.2: Graceful Shutdown**      | ✅ SIGTERM handling, wait in-flight           | 1/1     |
-| **5.3: Stateless Design**       | ✅ All state in Redis, no memory              | 2/2     |
-| **5.4: Load Balancing**         | ✅ Nginx routing across 3 instances           | 2/2     |
-| **5.5: Test Stateless Scaling** | ✅ 5 requests, 3 instances, history preserved | 2/2     |
-| **Part 5 Total**                | ✅ **Complete** 🎉                            | **8/8** |
+| **5.1: Health Checks**          |  /health working, uptime tracked            | 1/1     |
+| **5.2: Graceful Shutdown**      |  SIGTERM handling, wait in-flight           | 1/1     |
+| **5.3: Stateless Design**       |  All state in Redis, no memory              | 2/2     |
+| **5.4: Load Balancing**         |  Nginx routing across 3 instances           | 2/2     |
+| **5.5: Test Stateless Scaling** |  5 requests, 3 instances, history preserved | 2/2     |
+| **Part 5 Total**                |  **Complete**                             | **8/8** |
 
 **Test Verification:**
 
-- ✅ Health check responding correctly
-- ✅ 3 Docker containers running independently
-- ✅ Nginx load balancer routing requests
-- ✅ Redis maintaining session across instances
-- ✅ Conversation history preserved (10 messages, 5 requests)
-- ✅ Request distribution: instance-600a15, instance-fb8615, instance-b3f694
+-  Health check responding correctly
+-  3 Docker containers running independently
+-  Nginx load balancer routing requests
+-  Redis maintaining session across instances
+-  Conversation history preserved (10 messages, 5 requests)
+-  Request distribution: instance-600a15, instance-fb8615, instance-b3f694
 
 ---
 
@@ -1458,24 +1458,24 @@ Each agent:
 
 | Part       | Topic                   | Status      | Points    |
 | ---------- | ----------------------- | ----------- | --------- |
-| **Part 1** | Localhost vs Production | ✅ Complete | **8/8**   |
-| **Part 2** | Docker Containerization | ✅ Complete | **10/10** |
-| **Part 3** | Cloud Deployment        | ✅ Complete | **8/8**   |
-| **Part 4** | API Security            | ✅ Complete | **8/8**   |
-| **Part 5** | Scaling & Reliability   | ✅ Complete | **8/8**   |
+| **Part 1** | Localhost vs Production |  Complete | **8/8**   |
+| **Part 2** | Docker Containerization |  Complete | **10/10** |
+| **Part 3** | Cloud Deployment        |  Complete | **8/8**   |
+| **Part 4** | API Security            |  Complete | **8/8**   |
+| **Part 5** | Scaling & Reliability   |  Complete | **8/8**   |
 | **TOTAL**  | -                       | **42/48**   | **42/48** |
 
 ### Final Achievements
 
-✅ **Part 1**: 8 anti-patterns identified, 4 comparison tables
-✅ **Part 2**: 85.8% image size reduction (1.66GB → 236MB), multi-stage build
-✅ **Part 3**: Railway deployment (28.79s), Railway vs Render analysis
-✅ **Part 4**: JWT auth + rate limiting + cost guard + security headers tested
-✅ **Part 5**: Health checks + graceful shutdown + stateless scaling (3 instances, Redis session preservation)
+ **Part 1**: 8 anti-patterns identified, 4 comparison tables
+ **Part 2**: 85.8% image size reduction (1.66GB → 236MB), multi-stage build
+ **Part 3**: Railway deployment (28.79s), Railway vs Render analysis
+ **Part 4**: JWT auth + rate limiting + cost guard + security headers tested
+ **Part 5**: Health checks + graceful shutdown + stateless scaling (3 instances, Redis session preservation)
 
 ---
 
-## Part 6: Lab Complete — Final Integration (6 điểm) ✅
+## Part 6: Lab Complete — Final Integration (6 điểm) 
 
 ### Mục đích
 
@@ -1504,67 +1504,67 @@ Kết hợp **TẤT CẢ** những gì đã học trong Parts 1-5 vào 1 project
 └── check_production_ready.py # Validation script
 ```
 
-### Production Readiness Validation ✅
+### Production Readiness Validation 
 
 **Test:** `python check_production_ready.py`
 
 **Result: 20/20 checks PASSED (100%)**
 
 ```
-📁 Required Files
-  ✅ Dockerfile exists
-  ✅ docker-compose.yml exists
-  ✅ .dockerignore exists
-  ✅ .env.example exists
-  ✅ requirements.txt exists
-  ✅ railway.toml or render.yaml exists
+ Required Files
+   Dockerfile exists
+   docker-compose.yml exists
+   .dockerignore exists
+   .env.example exists
+   requirements.txt exists
+   railway.toml or render.yaml exists
 
-🔒 Security
-  ✅ .env in .gitignore
-  ✅ No hardcoded secrets in code
+ Security
+   .env in .gitignore
+   No hardcoded secrets in code
 
-🌐 API Endpoints
-  ✅ /health endpoint defined
-  ✅ /ready endpoint defined
-  ✅ Authentication implemented
-  ✅ Rate limiting implemented
-  ✅ Graceful shutdown (SIGTERM)
-  ✅ Structured logging (JSON)
+ API Endpoints
+   /health endpoint defined
+   /ready endpoint defined
+   Authentication implemented
+   Rate limiting implemented
+   Graceful shutdown (SIGTERM)
+   Structured logging (JSON)
 
-🐳 Docker
-  ✅ Multi-stage build
-  ✅ Non-root user (appuser)
-  ✅ HEALTHCHECK instruction
-  ✅ Slim base image (python:3.11-slim)
-  ✅ .dockerignore covers .env
-  ✅ .dockerignore covers __pycache__
+ Docker
+   Multi-stage build
+   Non-root user (appuser)
+   HEALTHCHECK instruction
+   Slim base image (python:3.11-slim)
+   .dockerignore covers .env
+   .dockerignore covers __pycache__
 
-Result: 20/20 checks passed ✅ PRODUCTION READY!
+Result: 20/20 checks passed  PRODUCTION READY!
 ```
 
 ### Key Features Integrated
 
-| Feature | Source | Implementation |
-|--|--|--|
-| **Health Checks** | Part 5 | `/health` + `/ready` endpoints |
+| Feature               | Source | Implementation                             |
+| --------------------- | ------ | ------------------------------------------ |
+| **Health Checks**     | Part 5 | `/health` + `/ready` endpoints             |
 | **Graceful Shutdown** | Part 5 | SIGTERM handling, drain in-flight requests |
-| **Stateless Design** | Part 5 | Redis session store (if needed) |
-| **API Security** | Part 4 | API Key auth + rate limiting (10/60s) |
-| **Cost Protection** | Part 4 | Budget guard (stop if budget exceeded) |
-| **Containerization** | Part 2 | Multi-stage Dockerfile (< 500MB) |
-| **Configuration** | Part 1 | 12-factor: all config from env vars |
-| **Logging** | Part 2 | Structured logging (JSON format) |
+| **Stateless Design**  | Part 5 | Redis session store (if needed)            |
+| **API Security**      | Part 4 | API Key auth + rate limiting (10/60s)      |
+| **Cost Protection**   | Part 4 | Budget guard (stop if budget exceeded)     |
+| **Containerization**  | Part 2 | Multi-stage Dockerfile (< 500MB)           |
+| **Configuration**     | Part 1 | 12-factor: all config from env vars        |
+| **Logging**           | Part 2 | Structured logging (JSON format)           |
 
 ### App Validation
 
-**Test:** `python -c "from app.main import app; print('✅ App imports successfully')"`
+**Test:** `python -c "from app.main import app; print(' App imports successfully')"`
 
 ```
 OPENAI_API_KEY not set — using mock LLM
-✅ App imports successfully
+ App imports successfully
 ```
 
-**Status:** ✅ App code is syntactically correct and imports properly
+**Status:**  App code is syntactically correct and imports properly
 
 ### API Endpoints (Full)
 
@@ -1598,6 +1598,7 @@ def ask(request: AskRequest, api_key: str = Header(...)):
 ### Deployment Ready
 
 **Railway:**
+
 ```bash
 railway init
 railway variables set OPENAI_API_KEY=sk-...
@@ -1607,12 +1608,14 @@ railway up
 ```
 
 **Render:**
+
 1. Push to GitHub
 2. Render Dashboard → New Blueprint → Connect repo
 3. Set secrets: `OPENAI_API_KEY`, `AGENT_API_KEY`
 4. Deploy → Get URL
 
 **Docker Local:**
+
 ```bash
 cd 06-lab-complete
 cp .env.example .env.local
@@ -1622,49 +1625,49 @@ docker compose up
 
 ### Testing Checklist
 
-| Test | Status | Details |
-|--|--|--|
-| **Production Readiness** | ✅ PASSED | 20/20 checks |
-| **Code Import** | ✅ PASSED | App imports successfully |
-| **Dockerfile** | ✅ FIXED | Removed non-existent utils/ ref |
-| **docker-compose** | ✅ READY | Agent + Redis configured |
-| **Security** | ✅ VERIFIED | No hardcoded secrets |
-| **API Structure** | ✅ VERIFIED | All endpoints defined |
+| Test                     | Status      | Details                         |
+| ------------------------ | ----------- | ------------------------------- |
+| **Production Readiness** |  PASSED   | 20/20 checks                    |
+| **Code Import**          |  PASSED   | App imports successfully        |
+| **Dockerfile**           |  FIXED    | Removed non-existent utils/ ref |
+| **docker-compose**       |  READY    | Agent + Redis configured        |
+| **Security**             |  VERIFIED | No hardcoded secrets            |
+| **API Structure**        |  VERIFIED | All endpoints defined           |
 
 ### Summary - Part 6: Lab Complete
 
-| Tiêu chí | Status | Điểm |
-|--|--|--|
-| **6.1: Integration** | ✅ All 5 parts combined | 1.5/1.5 |
-| **6.2: Production Readiness** | ✅ 20/20 checks passed | 1.5/1.5 |
-| **6.3: Deployable** | ✅ Railway + Render ready | 1.5/1.5 |
-| **6.4: Code Quality** | ✅ Imports successfully, no errors | 1.5/1.5 |
-| **Part 6 Total** | ✅ **Complete** 🎉 | **6/6** |
+| Tiêu chí                      | Status                             | Điểm    |
+| ----------------------------- | ---------------------------------- | ------- |
+| **6.1: Integration**          |  All 5 parts combined            | 1.5/1.5 |
+| **6.2: Production Readiness** |  20/20 checks passed             | 1.5/1.5 |
+| **6.3: Deployable**           |  Railway + Render ready          | 1.5/1.5 |
+| **6.4: Code Quality**         |  Imports successfully, no errors | 1.5/1.5 |
+| **Part 6 Total**              |  **Complete**                  | **6/6** |
 
 ---
 
 ## FINAL LAB SUMMARY - Day 12 Complete
 
-### 🎉 Final Score: 48/48 Points (100%!) 🎉
+###  Final Score: 48/48 Points (100%!) 
 
-| Part | Topic | Points | Status |
-|--|--|--|--|
-| **1** | Localhost vs Production | 8/8 | ✅ Complete |
-| **2** | Docker Containerization | 10/10 | ✅ Complete |
-| **3** | Cloud Deployment (Railway) | 8/8 | ✅ Complete |
-| **4** | API Security & Gateway | 8/8 | ✅ Complete |
-| **5** | Scaling & Reliability | 8/8 | ✅ Complete |
-| **6** | Lab Complete Integration | 6/6 | ✅ Complete |
-| **TOTAL** | | **48/48** | **100% ✅** |
+| Part      | Topic                      | Points    | Status      |
+| --------- | -------------------------- | --------- | ----------- |
+| **1**     | Localhost vs Production    | 8/8       |  Complete |
+| **2**     | Docker Containerization    | 10/10     |  Complete |
+| **3**     | Cloud Deployment (Railway) | 8/8       |  Complete |
+| **4**     | API Security & Gateway     | 8/8       |  Complete |
+| **5**     | Scaling & Reliability      | 8/8       |  Complete |
+| **6**     | Lab Complete Integration   | 6/6       |  Complete |
+| **TOTAL** |                            | **48/48** | **100% ** |
 
 ### Key Achievements
 
-1. ✅ **Anti-pattern Analysis** (Part 1) — 8 critical issues identified
-2. ✅ **Container Optimization** (Part 2) — 85.8% size reduction (1.66GB → 236MB)
-3. ✅ **Live Deployment** (Part 3) — Railway app running at lab12-production-651a.up.railway.app
-4. ✅ **Security Hardening** (Part 4) — JWT + Rate limiting + Cost guard
-5. ✅ **Horizontal Scaling** (Part 5) — 3 instances with Redis session persistence
-6. ✅ **Production Integration** (Part 6) — 20/20 readiness checks passed
+1.  **Anti-pattern Analysis** (Part 1) — 8 critical issues identified
+2.  **Container Optimization** (Part 2) — 85.8% size reduction (1.66GB → 236MB)
+3.  **Live Deployment** (Part 3) — Railway app running at lab12-production-651a.up.railway.app
+4.  **Security Hardening** (Part 4) — JWT + Rate limiting + Cost guard
+5.  **Horizontal Scaling** (Part 5) — 3 instances with Redis session persistence
+6.  **Production Integration** (Part 6) — 20/20 readiness checks passed
 
 ### Technologies Mastered
 
@@ -1683,4 +1686,4 @@ docker compose up
 
 ---
 
-**🏆 LAB 12 — 100% COMPLETE! 🏆**
+** LAB 12 — 100% COMPLETE! **

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sức khỏe & Môi trường | AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #37352f;
+            --text-muted: #73726c;
+            --border: #e9e9e7;
+            --notion-hover: #f1f1ef;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+        nav {
+            padding: 16px 60px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; background: #fff; z-index: 100;
+        }
+        .logo { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: inherit; }
+        .nav-links { display: flex; gap: 24px; font-size: 0.9rem; font-weight: 500; align-items: center; }
+        .nav-links a { color: var(--text); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+        .nav-links a:hover { background: var(--notion-hover); }
+
+        main { max-width: 800px; margin: 120px auto; padding: 0 20px; text-align: center; }
+        h1 { font-size: 3.8rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 24px; line-height: 1.1; }
+        p.desc { font-size: 1.35rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 48px; max-width: 650px; margin-left: auto; margin-right: auto; }
+
+        .cta-btn {
+            background: var(--text); color: #fff; padding: 14px 32px; 
+            border-radius: 6px; font-weight: 600; text-decoration: none;
+            transition: all 0.2s; cursor: pointer; border: none; font-size: 1.1rem;
+            display: inline-block;
+        }
+        .cta-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .auth-only { display: none; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">🌿 Eco-Health</a>
+        <div class="nav-links">
+            <a href="/">Trang chủ</a>
+            <span id="guest-links">
+                <a href="/login">Đăng nhập</a>
+                <a href="/register" style="background: var(--text); color: white; padding: 6px 14px;">Tham gia</a>
+            </span>
+            <span id="user-links" class="auth-only">
+                <span id="username-display" style="font-weight: 600; margin-right: 12px;"></span>
+                <a href="#" onclick="logout()" style="color: #eb5757;">Đăng xuất</a>
+            </span>
+        </div>
+    </nav>
+
+    <main>
+        <h1>Sức khỏe & Môi trường.<br>Thông minh hơn.</h1>
+        <p class="desc">Trợ lý AI giúp bạn theo dõi chất lượng không khí, thời tiết và đưa ra lời khuyên bảo vệ sức khỏe chuẩn khoa học.</p>
+        <a href="/chat" class="cta-btn">Trò chuyện ngay</a>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('t');
+        const guestLinks = document.getElementById('guest-links');
+        const userLinks = document.getElementById('user-links');
+
+        if (token) {
+            guestLinks.style.display = 'none';
+            userLinks.style.display = 'inline-flex';
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                document.getElementById('username-display').innerText = JSON.parse(jsonPayload).sub;
+            } catch(e) {}
+        }
+
+        function logout() {
+            localStorage.removeItem('t');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

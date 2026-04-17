@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat | Eco-Health AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #37352f;
+            --text-muted: #73726c;
+            --border: #e9e9e7;
+            --notion-hover: #f1f1ef;
+            --primary: #2383e2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+
+        nav {
+            padding: 12px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-weight: 700; font-size: 1rem; color: inherit; text-decoration: none; }
+        .logout-btn { color: #eb5757; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+        #container { flex: 1; display: flex; flex-direction: column; max-width: 800px; width: 100%; margin: 0 auto; overflow: hidden; }
+
+        #chat-box { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+
+        .msg { display: flex; gap: 16px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .avatar { width: 28px; height: 28px; border-radius: 4px; background: #f1f1ef; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+        .msg.user .avatar { background: #37352f; color: #fff; }
+
+        .content { flex: 1; font-size: 0.95rem; line-height: 1.6; padding-top: 4px; }
+        .content h3 { font-size: 1.1rem; margin: 12px 0 8px; font-weight: 700; }
+        .content p { margin-bottom: 8px; }
+        .content ul { margin-left: 20px; margin-bottom: 8px; }
+
+        .composer { padding: 20px; border-top: 1px solid var(--border); background: #fff; position: relative; }
+        .tool-bar { margin-bottom: 12px; display: flex; gap: 12px; }
+        .tool-btn { 
+            background: #f1f1ef; border: none; padding: 6px 12px; border-radius: 4px; 
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; 
+            display: flex; align-items: center; gap: 4px; color: var(--text-muted);
+        }
+        .tool-btn:hover { background: #e3e3e1; color: var(--text); }
+        .tool-btn.active { background: #e0f2fe; color: var(--primary); }
+
+        .input-wrapper { display: flex; gap: 12px; align-items: flex-end; background: #f7f6f3; padding: 12px 16px; border-radius: 8px; border: 1px solid transparent; transition: 0.2s; }
+        .input-wrapper:focus-within { background: #fff; border-color: var(--border); box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.1); }
+        
+        textarea { flex: 1; background: transparent; border: none; resize: none; outline: none; font-size: 1rem; color: var(--text); line-height: 1.5; padding: 0; max-height: 200px; }
+
+        #send-btn { 
+            background: var(--text); color: #fff; border: none; border-radius: 4px; 
+            padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; 
+            opacity: 0.3; pointer-events: none; transition: 0.2s;
+        }
+        #send-btn.active { opacity: 1; pointer-events: auto; }
+
+        #loading { display: none; padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e3e3e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">🌿 Eco-Health</a>
+        <a href="#" onclick="logout()" class="logout-btn">Đăng xuất</a>
+    </nav>
+
+    <div id="container">
+        <div id="chat-box">
+            <div class="msg agent">
+                <div class="avatar">🤖</div>
+                <div class="content">Chào mừng bạn! Tôi có thể giúp gì cho bạn hôm nay? Đừng ngại chia sẻ vị trí để tôi tư vấn chính xác hơn.</div>
+            </div>
+        </div>
+
+        <div id="loading">Eco-Health AI đang suy nghĩ...</div>
+
+        <div class="composer">
+            <div class="tool-bar">
+                <button id="loc-btn" class="tool-btn">
+                    <span>📍</span> Chia sẻ vị trí
+                </button>
+            </div>
+            <div class="input-wrapper">
+                <textarea id="i" placeholder="Gõ tin nhắn..." rows="1" spellcheck="false"></textarea>
+                <button id="send-btn">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('t');
+        if (!token) window.location.href = '/login';
+
+        const box = document.getElementById('chat-box');
+        const input = document.getElementById('i');
+        const sendBtn = document.getElementById('send-btn');
+        const locBtn = document.getElementById('loc-btn');
+        const loading = document.getElementById('loading');
+
+        let userCoords = null;
+
+        function logout() {
+            localStorage.removeItem('t');
+            window.location.href = '/login';
+        }
+
+        // Auto-resize textarea
+        input.oninput = function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            sendBtn.className = this.value.trim() ? 'active' : '';
+        };
+
+        // Geolocation
+        locBtn.onclick = () => {
+            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ định vị.");
+            
+            locBtn.innerText = "⏳ Đang lấy vị trí...";
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                    locBtn.innerText = "✅ Đã nhận vị trí";
+                    locBtn.classList.add('active');
+                    input.placeholder = "Hỏi về thời tiết/không khí tại đây...";
+                },
+                (err) => {
+                    alert("Không thể lấy vị trí. Vui lòng cấp quyền.");
+                    locBtn.innerText = "📍 Chia sẻ vị trí";
+                }
+            );
+        };
+
+        function addMsg(role, text) {
+            const m = document.createElement('div');
+            m.className = `msg ${role}`;
+            const avatar = role === 'user' ? '👤' : '🤖';
+            const html = marked.parse(text);
+            m.innerHTML = `<div class="avatar">${avatar}</div><div class="content">${html}</div>`;
+            box.appendChild(m);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function go() {
+            const v = input.value.trim();
+            if(!v) return;
+
+            addMsg('user', v);
+            input.value = '';
+            input.style.height = '48px';
+            sendBtn.className = '';
+            loading.style.display = 'block';
+
+            try {
+                const r = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ question: v, lat: userCoords?.lat, lon: userCoords?.lon })
+                });
+                const d = await r.json();
+                if(r.ok) addMsg('agent', d.answer);
+                else addMsg('agent', "Có lỗi xảy ra: " + (d.detail || "Server error"));
+            } catch(e) {
+                addMsg('agent', "Lỗi kết nối máy chủ.");
+            } finally {
+                loading.style.display = 'none';
+                input.focus();
+            }
+        }
+
+        sendBtn.onclick = go;
+        input.onkeydown = e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                go();
+            }
+        };
+    </script>
+</body>
+</html>

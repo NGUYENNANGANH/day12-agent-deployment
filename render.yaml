@@ -1,0 +1,38 @@
+services:
+  # 1. Backend API (FastAPI)
+  - type: web
+    name: eco-health-api
+    runtime: docker
+    dockerContext: backend
+    dockerfilePath: Dockerfile
+    plan: free # or starter
+    envVars:
+      - key: MONGO_URI
+        sync: false # Set manually via Dashboard (use MongoDB Atlas)
+      - key: REDIS_URL
+        fromService:
+          name: eco-health-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+
+  # 2. Frontend (Nginx + Static)
+  - type: web
+    name: eco-health-web
+    runtime: docker
+    dockerContext: frontend
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      - key: BACKEND_HOST
+        value: eco-health-api # Internal service discovery
+    # Note: Ensure nginx.conf uses the service name 'api' or this HOST
+
+# 3. Managed Redis
+databases:
+  - name: eco-health-redis
+    type: redis
+    plan: free
