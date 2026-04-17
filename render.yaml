@@ -30,9 +30,8 @@ services:
       - key: BACKEND_HOST
         value: eco-health-api
 
-# 3. Managed Redis
-redis:
-  - name: eco-health-redis
+  # 3. Redis Service
+  - type: redis
+    name: eco-health-redis
     plan: free
-    # Note: Keep it as 'free' for the lab.
-
+    ipAllowList: [] # Allow all internal connections
