@@ -136,9 +136,13 @@ async def call_openai(question: str, history: list, lat: Optional[float] = None,
     if not settings.openai_api_key: return "API Key not set"
     client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
     
-    sys_msg = "Bạn là Chuyên gia Tư vấn Sức khỏe môi trường. Hãy dùng tool để kiểm tra thời tiết/không khí và tư vấn cho người dùng."
+    sys_msg = (
+        "Bạn là Chuyên gia Tư vấn Sức khỏe Môi Trường thông minh. "
+        "LUÔN LUÔN gọi tool get_env để lấy dữ liệu thời tiết/AQI thực tế trước khi trả lời bất kỳ câu hỏi nào liên quan đến thời tiết, nhiệt độ, không khí, AQI, mưa, gió, nắng, hay bất kỳ điều kiện môi trường nào. "
+        "KHÔNG ĐƯỢC tự trả lời mà không có dữ liệu từ tool. Nếu người dùng không nêu địa điểm, hãy hỏi lại họ hoặc dùng tọa độ nếu có."
+    )
     if lat and lon:
-        sys_msg += f" Người dùng đang ở vị trí có tọa độ: {lat}, {lon}. Hãy ưu tiên lấy thông tin tại đây nếu họ hỏi về 'chỗ tôi' hoặc 'ở đây'."
+        sys_msg += f" Người dùng đang ở tọa độ: {lat}, {lon}. Gọi tool với tọa độ này ngay khi họ hỏi về 'chỗ tôi' hoặc 'ở đây'.'"
 
     msgs = [{"role": "system", "content": sys_msg}]
     for h in history: msgs.append({"role": "user" if h.startswith("Q: ") else "assistant", "content": h[3:]})
@@ -160,7 +164,12 @@ async def call_openai(question: str, history: list, lat: Optional[float] = None,
         }
     }]
     
-    resp = await client.chat.completions.create(model=settings.llm_model, messages=msgs, tools=tools)
+    resp = await client.chat.completions.create(
+        model=settings.llm_model,
+        messages=msgs,
+        tools=tools,
+        tool_choice="required",
+    )
     m = resp.choices[0].message
     if m.tool_calls:
         for t in m.tool_calls:
