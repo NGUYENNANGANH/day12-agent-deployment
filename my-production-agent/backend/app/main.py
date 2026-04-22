@@ -122,15 +122,31 @@ async def get_coordinates(location_name: str) -> dict:
 async def fetch_environmental_data(lat: float, lon: float) -> str:
     weather_url = "https://api.open-meteo.com/v1/forecast"
     aqi_url = "https://air-quality-api.open-meteo.com/v1/air-quality"
-    w_params = {"latitude": lat, "longitude": lon, "current_weather": "true"}
-    aqi_params = {"latitude": lat, "longitude": lon, "hourly": "us_aqi,pm2_5"}
-    async with httpx.AsyncClient() as client:
+    w_params = {
+        "latitude": lat, "longitude": lon,
+        "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation",
+        "timezone": "auto"
+    }
+    aqi_params = {"latitude": lat, "longitude": lon, "current": "us_aqi,pm2_5"}
+    async with httpx.AsyncClient(timeout=15.0) as client:
         try:
-            w_res, a_res = await asyncio.gather(client.get(weather_url, params=w_params), client.get(aqi_url, params=aqi_params))
-            w = w_res.json().get("current_weather", {})
-            a = a_res.json().get("hourly", {}).get("us_aqi", [0])
-            return json.dumps({"temp": w.get("temperature"), "aqi": a[-1]})
-        except: return json.dumps({"error": "API error"})
+            w_res, a_res = await asyncio.gather(
+                client.get(weather_url, params=w_params),
+                client.get(aqi_url, params=aqi_params)
+            )
+            w = w_res.json().get("current", {})
+            a = a_res.json().get("current", {})
+            return json.dumps({
+                "temperature_c": w.get("temperature_2m"),
+                "humidity_pct": w.get("relative_humidity_2m"),
+                "wind_speed_kmh": w.get("wind_speed_10m"),
+                "precipitation_mm": w.get("precipitation"),
+                "aqi_us": a.get("us_aqi"),
+                "pm25": a.get("pm2_5"),
+            })
+        except Exception as e:
+            logger.error(f"fetch_environmental_data error: {e}")
+            return json.dumps({"error": str(e)})
 
 async def call_openai(question: str, history: list, lat: Optional[float] = None, lon: Optional[float] = None) -> str:
     if not settings.openai_api_key: return "API Key not set"
